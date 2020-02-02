@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 
 # ----------  signals -----------------------------
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver 
 
 
@@ -36,13 +36,6 @@ class Booking(models.Model):
 
 
 
-# ---------------------- signale ADD booking ------------------------------
-@receiver(post_save, sender=User)
-def create_profile(instance, *args, **kwargs):
-    Profile.objects.create(user = instance )
-
-
-   
 
 
 
@@ -59,19 +52,38 @@ class Profile(models.Model):
 
 
 # ---------------------- signale CREATE profile ------------------------------
-@receiver(post_save, sender=Booking)
+@receiver(post_save, sender=User)
 def create_profile(instance, *args, **kwargs):
-    Profile.objects.create(user = instance )
+	Profile.objects.create(user = instance )
+
+   
 
 
+
+
+# ---------------------- signale ADD booking ------------------------------
+@receiver(post_save, sender=Booking)
+def add_miles(instance, *args, **kwargs):
+	# flight_miles = instance.flight.miles
+	# profile_miles = instance.user.profile.miles
+	# total_miles = 
+
+	instance.user.profile.miles = instance.flight.miles + instance.user.miles 
+	instance.user.profile.save()
+
+
+   
 
 
 
 
 # # ---------------------- signale CANCELLED profile ------------------------------
-@receiver(post_save, sender=User)
-def cancell_profile(instance, *args, **kwargs):
-    Profile.objects.cancel(user = instance )    
+@receiver(post_delete, sender=User)
+def remove_miles(instance, *args, **kwargs):
+   instance.user.profile.miles = instance.user.profile.miles - instance.flight.miles
+   instance.user.profile.save()
+
+	
 
 
 
